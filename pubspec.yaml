@@ -1,0 +1,58 @@
+name: dpe_toolkit
+description: >
+  Original, clean-room-developed practice management application for FAA
+  Designated Pilot Examiners and Certificated Flight Instructors.
+  See docs/DPE-Toolkit-Architecture.md for full design rationale.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management (Section 2 — Tech Stack)
+  flutter_riverpod: ^2.5.1
+
+  # Local database — SQLite via drift.
+  # NOTE: SQLCipher encryption (sqlcipher_flutter_libs) was removed here
+  # for local development on Windows, since it requires a separate OpenSSL
+  # install + OPENSSL_ROOT_DIR environment variable to build, which broke
+  # the Windows CMake build. Re-add sqlcipher_flutter_libs and swap
+  # database.dart back to the encrypted connection before this handles
+  # real applicant PII — see the note in lib/data/database.dart.
+  drift: ^2.16.0
+  sqlite3_flutter_libs: ^0.5.20
+  path_provider: ^2.1.3
+  path: ^1.9.0
+
+  # PDF generation — intake forms, invoices, checkride paperwork
+  pdf: ^3.10.8
+  printing: ^5.12.0
+
+  # OS local notifications — session reminders (Section 6, confirmed approach)
+  flutter_local_notifications: ^17.1.2
+
+  # OCR support for AKR deficiency code entry (Section 4, confirmed dual entry)
+  google_mlkit_text_recognition: ^0.13.0
+
+  # Email sending — SMTP/OAuth automated triggers (Section 6, confirmed automatic)
+  mailer: ^6.1.0
+
+  # Geocoding/routing for the mileage tracker (street address, business
+  # name, and airport identifier resolution + driving-distance calculation)
+  http: ^1.2.1
+
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  drift_dev: ^2.16.0
+  build_runner: ^2.4.9
+  flutter_lints: ^3.0.2
+
+flutter:
+  uses-material-design: true
