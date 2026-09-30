@@ -321,19 +321,33 @@ class _PendingSessionTileState extends State<_PendingSessionTile> {
           // Scenario hand-off point: scenarios managed in TestScenariosScreen
           // (features/test_organizer) are picked here and written to
           // test_sessions.scenario_id by confirmSession() below.
-          // TODO: guard _scenarioId against a scenario archived while
-          // selected — DropdownButtonFormField asserts if value isn't in
-          // items. Also consider an empty-state hint when none exist.
           StreamBuilder<List<TestScenario>>(
             stream: widget.standardsRepo
                 .watchScenariosForStandard(widget.session.standardId),
             builder: (context, snapshot) {
               final scenarios = snapshot.data ?? [];
+              // A selected scenario can be archived from the Test Organizer
+              // while this card is open. DropdownButtonFormField asserts if
+              // its value isn't among the items, so drop the stale selection
+              // (after this frame) rather than confirming an archived one.
+              final selectionValid = _scenarioId == null ||
+                  scenarios.any((s) => s.id == _scenarioId);
+              if (snapshot.hasData && !selectionValid) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _scenarioId = null);
+                });
+              }
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: DropdownButtonFormField<int>(
-                  decoration: const InputDecoration(labelText: 'Scenario (optional)'),
-                  value: _scenarioId,
+                  decoration: InputDecoration(
+                    labelText: 'Scenario (optional)',
+                    helperText: snapshot.hasData && scenarios.isEmpty
+                        ? 'No active scenarios for this standard — add them '
+                            'in Test Organizer → Scenarios.'
+                        : null,
+                  ),
+                  value: selectionValid ? _scenarioId : null,
                   items: [
                     for (final s in scenarios)
                       DropdownMenuItem(value: s.id, child: Text(s.scenarioTitle)),
