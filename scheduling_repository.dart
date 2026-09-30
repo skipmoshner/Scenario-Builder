@@ -56,6 +56,30 @@ class SchedulingRepository {
             ..where((s) => s.id.equals(sessionId)))
           .getSingle();
 
+      // The UI only offers active scenarios for the session's standard, but
+      // enforce it here too — this is the one place scenario_id is written.
+      // Throwing inside the transaction rolls back, so nothing is resolved.
+      if (scenarioId != null) {
+        final scenario = await (_db.select(_db.testScenarios)
+              ..where((s) => s.id.equals(scenarioId)))
+            .getSingleOrNull();
+        if (scenario == null) {
+          throw StateError('Scenario $scenarioId no longer exists.');
+        }
+        if (scenario.standardId != session.standardId) {
+          throw StateError(
+            'Scenario "${scenario.scenarioTitle}" belongs to a different '
+            'standard than this session.',
+          );
+        }
+        if (!scenario.isActive) {
+          throw StateError(
+            'Scenario "${scenario.scenarioTitle}" is archived. Restore it '
+            'or choose another scenario.',
+          );
+        }
+      }
+
       // Pull every element for this standard, joined through
       // tasks -> areas_of_operation, so we have area context for the
       // fixed random-draw count.

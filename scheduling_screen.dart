@@ -363,10 +363,19 @@ class _PendingSessionTileState extends State<_PendingSessionTile> {
               icon: const Icon(Icons.check_circle_outline),
               label: const Text('Confirm Session'),
               onPressed: () async {
-                await widget.schedulingRepo.confirmSession(
-                  widget.session.id,
-                  scenarioId: _scenarioId,
-                );
+                try {
+                  await widget.schedulingRepo.confirmSession(
+                    widget.session.id,
+                    scenarioId: _scenarioId,
+                  );
+                } on StateError catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.message)),
+                    );
+                  }
+                  return;
+                }
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
