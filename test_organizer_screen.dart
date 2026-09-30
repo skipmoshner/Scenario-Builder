@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../data/database.dart';
 import '../../data/schema/test_standards.dart';
+import 'test_scenarios_screen.dart';
 
 class TestOrganizerScreen extends ConsumerStatefulWidget {
   const TestOrganizerScreen({super.key});
@@ -14,13 +15,31 @@ class TestOrganizerScreen extends ConsumerStatefulWidget {
 
 class _TestOrganizerScreenState extends ConsumerState<TestOrganizerScreen> {
   int? _selectedStandardId;
+  String? _selectedStandardLabel;
 
   @override
   Widget build(BuildContext context) {
     final repo = ref.watch(testStandardsRepositoryProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Practical Test Organizer')),
+      appBar: AppBar(
+        title: const Text('Practical Test Organizer'),
+        actions: [
+          if (_selectedStandardId != null)
+            TextButton.icon(
+              icon: const Icon(Icons.menu_book_outlined),
+              label: const Text('Scenarios'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TestScenariosScreen(
+                    standardId: _selectedStandardId!,
+                    standardLabel: _selectedStandardLabel ?? '',
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -46,7 +65,13 @@ class _TestOrganizerScreenState extends ConsumerState<TestOrganizerScreen> {
                         ),
                       ),
                   ],
-                  onChanged: (id) => setState(() => _selectedStandardId = id),
+                  onChanged: (id) => setState(() {
+                    _selectedStandardId = id;
+                    _selectedStandardLabel = standards
+                        .where((s) => s.id == id)
+                        .map((s) => s.certificateRating)
+                        .firstOrNull;
+                  }),
                 ),
               );
             },

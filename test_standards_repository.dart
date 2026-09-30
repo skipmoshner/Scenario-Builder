@@ -68,6 +68,54 @@ class TestStandardsRepository {
             ..where((s) => s.standardId.equals(standardId) & s.isActive.equals(true)))
           .watch();
 
+  /// Includes archived scenarios — for the scenario management screen.
+  /// Scheduling uses watchScenariosForStandard above, which hides them.
+  Stream<List<TestScenario>> watchAllScenariosForStandard(int standardId) =>
+      (_db.select(_db.testScenarios)
+            ..where((s) => s.standardId.equals(standardId))
+            ..orderBy([(s) => OrderingTerm.asc(s.scenarioTitle)]))
+          .watch();
+
+  Future<void> addScenario({
+    required int standardId,
+    required String title,
+    required String narrative,
+    bool isActive = true,
+  }) {
+    return _db.into(_db.testScenarios).insert(
+          TestScenariosCompanion.insert(
+            standardId: standardId,
+            scenarioTitle: title,
+            scenarioNarrative: narrative,
+            isActive: Value(isActive),
+          ),
+        );
+  }
+
+  Future<void> updateScenario(
+    int scenarioId, {
+    required String title,
+    required String narrative,
+    required bool isActive,
+  }) {
+    return (_db.update(_db.testScenarios)
+          ..where((s) => s.id.equals(scenarioId)))
+        .write(TestScenariosCompanion(
+      scenarioTitle: Value(title),
+      scenarioNarrative: Value(narrative),
+      isActive: Value(isActive),
+    ));
+  }
+
+  /// Archive/restore. Scenarios are soft-deleted (is_active = false), never
+  /// hard-deleted, because test_sessions.scenario_id references them —
+  /// same convention as SchedulerRoles.
+  Future<void> setScenarioActive(int scenarioId, bool isActive) {
+    return (_db.update(_db.testScenarios)
+          ..where((s) => s.id.equals(scenarioId)))
+        .write(TestScenariosCompanion(isActive: Value(isActive)));
+  }
+
   Future<void> deleteQuestion(int questionId) {
     return (_db.delete(_db.elementQuestions)
           ..where((q) => q.id.equals(questionId)))

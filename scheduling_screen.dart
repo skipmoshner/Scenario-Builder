@@ -318,6 +318,12 @@ class _PendingSessionTileState extends State<_PendingSessionTile> {
             '${widget.session.sessionDate.toString().split(' ').first}'),
         subtitle: Text('Status: ${widget.session.status.name}'),
         children: [
+          // Scenario hand-off point: scenarios managed in TestScenariosScreen
+          // (features/test_organizer) are picked here and written to
+          // test_sessions.scenario_id by confirmSession() below.
+          // TODO: guard _scenarioId against a scenario archived while
+          // selected — DropdownButtonFormField asserts if value isn't in
+          // items. Also consider an empty-state hint when none exist.
           StreamBuilder<List<TestScenario>>(
             stream: widget.standardsRepo
                 .watchScenariosForStandard(widget.session.standardId),
